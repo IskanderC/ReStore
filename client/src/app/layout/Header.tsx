@@ -44,8 +44,8 @@ return (
             <Typography variant='h6' component={NavLink} 
             to='/'
             exact
-            sx={{navStyles}}>
-                Re-STORE
+            sx={navStyles}>
+                RE-STORE
             </Typography>
             <Switch checked={darkMode} onChange={handleThemeChange} />
             </Box>
