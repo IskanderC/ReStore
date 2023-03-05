@@ -7,9 +7,9 @@ namespace API.RequestHelpers
 {
     public class ProductParams : PaginationParams
     {
-        public int OrderBy { get; set; }
-        public int SearchTerm { get; set; }
-        public int Types { get; set; }
-        public int Brands { get; set; }
+        public string OrderBy { get; set; }
+        public string SearchTerm { get; set; }
+        public string Types { get; set; }
+        public string Brands { get; set; }
     }
 }
