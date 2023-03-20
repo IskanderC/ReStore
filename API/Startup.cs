@@ -7,6 +7,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using API.Middleware;
+using API.Entities;
+using Microsoft.AspNetCore.Identity;
 
 namespace API
 {
@@ -33,6 +35,11 @@ namespace API
                 opt.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
             });
             services.AddCors();
+            services.AddIdentityCore<User>()
+                .AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<StoreContext>();
+            services.AddAuthentication();
+            services.AddAuthorization();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
