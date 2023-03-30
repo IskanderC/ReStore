@@ -10,6 +10,10 @@ using API.Middleware;
 using API.Entities;
 using Microsoft.AspNetCore.Identity;
 using API.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System;
 
 namespace API
 {
@@ -29,8 +33,31 @@ namespace API
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebAPIv5", Version = "v1" });
+               var jwtSecurityScheme = new OpenApiSecurityScheme
+               {
+                    BearerFormat = "JWT",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = JwtBearerDefaults.AuthenticationScheme,
+                    Description = "Put Bearer + your token in the box below",
+                    Reference = new OpenApiReference
+                    {
+                        Id = JwtBearerDefaults.AuthenticationScheme,
+                        Type = ReferenceType.SecurityScheme
+                    }
+               };
+
+               c.AddSecurityDefinition(jwtSecurityScheme.Reference.Id, jwtSecurityScheme);
+
+               c.AddSecurityRequirement(new OpenApiSecurityRequirement
+               {
+                {
+                    jwtSecurityScheme, Array.Empty<string>()
+                }
+               });
             });
+            
             services.AddDbContext<StoreContext>(opt =>
             {
                 opt.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
@@ -42,7 +69,19 @@ namespace API
             })
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<StoreContext>();
-            services.AddAuthentication();
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(opt => 
+            {
+                opt.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.
+                    GetBytes(Configuration["JWTSettings:TokenKey"]))
+                };
+            });
             services.AddAuthorization();
             services.AddScoped<TokenService>();
         }
@@ -56,7 +95,10 @@ namespace API
             if (env.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebAPIv5 v1"));
+                app.UseSwaggerUI(c => 
+                {
+                    c.ConfigObject.AdditionalItems.Add("persistAuthorization", "true");
+                });
             }
 
             // app.UseHttpsRedirection();
@@ -66,6 +108,8 @@ namespace API
             {
             opt.AllowAnyHeader().AllowAnyMethod().AllowCredentials().WithOrigins("http://localhost:3000");
             });
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
