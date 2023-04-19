@@ -1,6 +1,4 @@
-import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
@@ -9,27 +7,32 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Paper } from '@mui/material';
-import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 import agent from '../../app/api/agent';
 import { useForm } from 'react-hook-form';
 import { FieldValues } from 'react-hook-form/dist/types';
 import { LoadingButton } from '@mui/lab';
+import { useAppDispatch } from '../../app/store/configureStore';
+import { signInUser } from './accountSlice';
 
 const theme = createTheme();
 
 export default function Login() {
+    const history = useHistory();
+    const location = useLocation<any>();
+    const dispatch = useAppDispatch();
     const {register, handleSubmit, formState: {isSubmitting, errors, isValid}} = useForm({
         mode: 'onTouched'
     })
 
     async function submitForm(data: FieldValues) {
-        try{
-            await agent.Account.login(data);
-        } catch (error){
-            console.log(error);
-        }
+      try {
+        await dispatch(signInUser(data));
+        history.push(location.state?.from?.pathname ||  '/catalog');
+    } catch (error) {
+        console.log(error);
     }
+  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -62,7 +65,7 @@ export default function Login() {
             />
             <LoadingButton
               loading={isSubmitting}
-              disabled={isValid}
+              disabled={!isValid}
               type="submit"
               fullWidth
               variant="contained"
